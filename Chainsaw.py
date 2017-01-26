@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, update
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import sqlite3
@@ -6,7 +6,6 @@ import traceback
 
 from Chainsaw_Database import Contestant
 
-cursor = db.cursor()
 
 def setup():
 
@@ -28,36 +27,62 @@ def add_record():
     country = input("Enter the country of the contestant: ")
     catches = int(input("How many catches did they make: "))
 
-    cursor.execute('INSERT INTO Record_Holders VALUES (? , ? , ?)', (name, country, catches))
-    db.commit()
+    record = Contestant(name = name, country = country, catches = catches)
+
+    add_contestant = Session()
+
+    add_contestant.add(record)
+    add_contestant.commit()
+    add_contestant.close()
+
+    #
+    # cursor.execute('INSERT INTO Record_Holders VALUES (? , ? , ?)', (name, country, catches))
+    # db.commit()
 
 
 def delete_record():
 
+
     name = input("Enter the name of the contestant: ")
 
-    cursor.execute('DELETE FROM Record_Holders WHERE Chainsaw_Juggling_Record_Holder = ?', (name,)) # Needed to make this a tuple, wierd.
-    db.commit()
+    delete_contestant = Session()
+
+    results = delete_contestant.query(Contestant).filter(Contestant.name == name).one_or_none()
+
+    delete_contestant.delete(results)
+    delete_contestant.commit()
+    delete_contestant.close()
+
 
 def update_record():
 
     name = input("Enter the name of the contestant: ")
     column = input("Do you want to update CATCHES or COUNTRY: ")
 
+    update_contestant = Session()
+
 
     if column == "catches":
 
         new_value = int(input("How may catches did they make: "))
 
-        cursor.execute('UPDATE Record_Holders SET Number_of_Catches = ? WHERE Chainsaw_Juggling_Record_Holder = ?', (new_value, name))
-        db.commit()
+        person = update_contestant.query(Contestant).filter(Contestant.name == name).one_or_none()
+        person.catches = new_value
+
+        update_contestant.commit()
+        update_contestant.close()
+
 
     elif column == "country":
 
         new_value = input("What country are they from: ")
 
-        cursor.execute('UPDATE Record_Holders SET Country = ? WHERE Chainsaw_Juggling_Record_Holder = ?', (new_value, name))
-        db.commit()
+        person = update_contestant.query(Contestant).filter(Contestant.name == name).one_or_none()
+        person.catches = new_value
+
+        update_contestant.commit()
+        update_contestant.close()
+
 
     else:
 
@@ -66,10 +91,12 @@ def update_record():
 
 def display_table():
 
-    cursor.execute('SELECT * FROM Record_Holders' )
+    display = Session()
 
-    for row in cursor:
-        print(row)
+    for contestant in display.query(Contestant):
+        print(contestant)
+
+    display.close()
 
 
 def display_menu(): # Displays menu
@@ -87,9 +114,6 @@ def display_menu(): # Displays menu
 
     return choice
 
-def quit():
-
-    db.close()
 
 
 
@@ -129,7 +153,7 @@ def main():
 
         if choice == "q":
 
-            quit()
+            print("Thank you.")
             break
 
         elif choice.isdigit():
