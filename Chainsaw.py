@@ -4,21 +4,19 @@ from sqlalchemy.ext.declarative import declarative_base
 import sqlite3
 import traceback
 
-from Chainsaw_Database import Contestant
+from chainsaw_db import Contestant
+from base import Base
 
 
-def setup():
+engine = create_engine('sqlite:///chainsaw_db.db', echo=False)
 
-    engine = create_engine('sqlite:///chainsaw_db.db', echo=True)
+Base.metadata.create_all(engine) # Create a table for all the classes that use Base
 
-    Base = Chainsaw_Database.Base
+# Need a Session to talk to the database.
+# A session manages mappings of objects to rows in the database.
+# Make a Session class. Only need to do this one time.
+Session = sessionmaker(bind=engine)   #Use the engine created earlier
 
-    Base.metadata.create_all(engine) # Create a table for all the classes that use Base
-
-    # Need a Session to talk to the database.
-    # A session manages mappings of objects to rows in the database.
-    # Make a Session class. Only need to do this one time.
-    Session = sessionmaker(bind=engine)   #Use the engine created earlier
 
 
 def add_record():
@@ -142,7 +140,6 @@ def handle_choice(choice): # Handles choices to clean up code.
 
 def main():
 
-    setup()
 
     print("Welcome to the Chainsaw Juggling Program!")
 
